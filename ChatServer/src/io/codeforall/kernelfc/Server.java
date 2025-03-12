@@ -79,6 +79,12 @@ public class Server {
         public void setName (){
             try {
                 String name = in.readLine();
+                if (nameExists(name)){
+                    while(nameExists(name)){
+                        out.println("Name already exists, pick a diferent one");
+                        name = in.readLine();
+                    }
+                }
                 this.name = name;
             } catch (IOException e) {
                 System.out.println(e.getMessage());
@@ -96,18 +102,21 @@ public class Server {
 
         public void read () {
             String message = "ola menina quero cuidar de ti";
+            boolean isCommand = false;
 
             while (message != null) {
 
                 try {
                     message = in.readLine();
                     String[] commands = message.split("\\s+");
-                    if(message.equals("/quit")) break;
-                    if(message.equals("/list")) writeList();
-                    if(commands[0].equals("/whisper")) {
-                        whisperMessage(commands);
+                    if(commands[0].equals("/quit")) {
+                        isCommand = true;
+                        break;
                     }
-                    if(message != null && !message.equals("/quit") && !message.equals("/list") && !(commands[0].equals("/whisper"))){
+                    isCommand = commandExecutioner(commands, commands[0]); // check if message has a command and saves the value in isCommand, also executes the command if true
+                    if(isCommand) continue;
+
+                    if(message != null && !isCommand){
                         write(message);
                         System.out.println(name + " said: " + message);
                     }
@@ -118,6 +127,7 @@ public class Server {
                 }
             }
             write("rage quitted");
+            System.out.println("rage quitted");
 
             try {
                 in.close();
@@ -127,6 +137,20 @@ public class Server {
             }
 
 
+        }
+
+        public boolean commandExecutioner (String[] entireMessage ,String command){
+            switch (command){
+                case "/whisper":
+                    whisperMessage(entireMessage);
+                    return true;
+
+                case  "/list":
+                    writeList();
+                    return true;
+
+            }
+            return false;
         }
 
         public void writeList(){
@@ -164,6 +188,14 @@ public class Server {
                     }
                 }
             } else out.println("whisper command badly used");
+        }
+
+        public boolean nameExists (String name){
+            for(int i = 0; i<clientHandlers.size();i++){
+                if(clientHandlers.get(i).getName().equals(name)){
+                    return true;
+                }
+            } return false;
         }
 
 
